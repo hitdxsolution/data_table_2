@@ -61,6 +61,9 @@ class DataColumn2 extends DataColumn {
 /// which can be useful in Desktop settings when a reaction to the right click is required.
 @immutable
 class DataRow2 extends DataRow {
+  /// RowWrapper 개념 추가(Table 객체를 넘기는 구조라서 cell 하나하나에 감싸야 됨.)
+  final Widget Function(Widget)? rowWrapper;
+
   //DataRow2.fromDataRow(DataRow row) : this.cells = row.cells;
 
   /// Creates the configuration for a row of a [DataTable2].
@@ -78,7 +81,8 @@ class DataRow2 extends DataRow {
       this.onDoubleTap,
       super.onLongPress,
       this.onSecondaryTap,
-      this.onSecondaryTapDown});
+      this.onSecondaryTapDown,
+      this.rowWrapper});
 
   DataRow2.byIndex(
       {super.index,
@@ -92,7 +96,8 @@ class DataRow2 extends DataRow {
       this.onDoubleTap,
       super.onLongPress,
       this.onSecondaryTap,
-      this.onSecondaryTapDown})
+      this.onSecondaryTapDown,
+      this.rowWrapper})
       : super.byIndex();
 
   /// Clone row, if non null values are provided - override the corresponding fields
@@ -526,26 +531,28 @@ class DataTable2 extends DataTable {
     );
   }
 
-  Widget _buildDataCell(
-      {required BuildContext context,
-      required EdgeInsetsGeometry padding,
-      required double? specificRowHeight,
-      required Widget label,
-      required bool numeric,
-      required bool placeholder,
-      required bool showEditIcon,
-      required GestureTapCallback? onTap,
-      required GestureTapCallback? onDoubleTap,
-      required GestureLongPressCallback? onLongPress,
-      required GestureTapDownCallback? onTapDown,
-      required GestureTapCancelCallback? onTapCancel,
-      required GestureTapCallback? onRowTap,
-      required GestureTapCallback? onRowDoubleTap,
-      required GestureLongPressCallback? onRowLongPress,
-      required GestureTapCallback? onRowSecondaryTap,
-      required GestureTapDownCallback? onRowSecondaryTapDown,
-      required VoidCallback? onSelectChanged,
-      required WidgetStateProperty<Color?>? overlayColor}) {
+  Widget _buildDataCell({
+    required BuildContext context,
+    required EdgeInsetsGeometry padding,
+    required double? specificRowHeight,
+    required Widget label,
+    required bool numeric,
+    required bool placeholder,
+    required bool showEditIcon,
+    required GestureTapCallback? onTap,
+    required GestureTapCallback? onDoubleTap,
+    required GestureLongPressCallback? onLongPress,
+    required GestureTapDownCallback? onTapDown,
+    required GestureTapCancelCallback? onTapCancel,
+    required GestureTapCallback? onRowTap,
+    required GestureTapCallback? onRowDoubleTap,
+    required GestureLongPressCallback? onRowLongPress,
+    required GestureTapCallback? onRowSecondaryTap,
+    required GestureTapDownCallback? onRowSecondaryTapDown,
+    required VoidCallback? onSelectChanged,
+    required WidgetStateProperty<Color?>? overlayColor,
+    Widget Function(Widget)? rowWrapper,
+  }) {
     final ThemeData themeData = Theme.of(context);
     final DataTableThemeData dataTableTheme = DataTableTheme.of(context);
 
@@ -591,18 +598,24 @@ class DataTable2 extends DataTable {
         onTapCancel != null) {
       // cell level
       label = InkWell(
-        onTap: ((onTap == null) && (onRowTap == null)) ? null : () {
-          onTap?.call();
-          onRowTap?.call();
-        },
-        onDoubleTap: ((onDoubleTap == null) && (onRowDoubleTap == null)) ? null : () {
-          onDoubleTap?.call();
-          onRowDoubleTap?.call();
-        },
-        onLongPress: ((onLongPress == null) && (onRowLongPress == null)) ? null : () {
-          onLongPress?.call();
-          onRowLongPress?.call();
-        },
+        onTap: ((onTap == null) && (onRowTap == null))
+            ? null
+            : () {
+                onTap?.call();
+                onRowTap?.call();
+              },
+        onDoubleTap: ((onDoubleTap == null) && (onRowDoubleTap == null))
+            ? null
+            : () {
+                onDoubleTap?.call();
+                onRowDoubleTap?.call();
+              },
+        onLongPress: ((onLongPress == null) && (onRowLongPress == null))
+            ? null
+            : () {
+                onLongPress?.call();
+                onRowLongPress?.call();
+              },
         onTapDown: onTapDown,
         onTapCancel: onTapCancel,
         // Also add row level events to cells
@@ -628,7 +641,7 @@ class DataTable2 extends DataTable {
         child: label,
       );
     }
-    return label;
+    return rowWrapper != null ? rowWrapper(label) : label;
   }
 
   @override
@@ -933,6 +946,7 @@ class DataTable2 extends DataTable {
                 //dataRows[rowIndex].children![displayColumnIndex]
 
                 var c = _buildDataCell(
+                    rowWrapper: row is DataRow2 ? row.rowWrapper : null,
                     context: context,
                     padding: padding,
                     specificRowHeight:
