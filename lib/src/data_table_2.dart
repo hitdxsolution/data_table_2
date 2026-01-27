@@ -512,7 +512,6 @@ class DataTable2 extends DataTable {
     final (effectiveDataRowMinHeight, effectiveDataRowMaxHeight) = getMinMaxRowHeight(dataTableTheme);
 
     label = Container(
-      width: double.infinity,
       color: Colors.transparent,
       padding: padding,
       constraints: BoxConstraints(minHeight: specificRowHeight ?? effectiveDataRowMinHeight, maxHeight: specificRowHeight ?? effectiveDataRowMaxHeight),
